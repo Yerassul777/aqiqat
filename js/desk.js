@@ -348,7 +348,7 @@ AQ.UI = (function () {
     }
 
     $('topbar').innerHTML =
-      '<div class="brand">AQIQAT</div>' +
+      '<div class="brand">DEEPTRUTH</div>' +
       '<div class="clock">' + G.clockLabel(S) + '</div>' +
       '<div class="saved">' +
         '<div class="lbl">' + T('saved') + '</div>' +

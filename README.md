@@ -1,4 +1,4 @@
-# AQIQAT — The Long Night / Ұзақ түн
+# DeepTruth — The Long Night / Ұзақ түн
 
 Игра о верификации для **UNESCO Youth Hackathon 2026** (тема: *Play Your Part: Youth Designing the Future of Media and Information Literacy*).
 Треки: **AI and MIL** (основной), **MIL Education** (вторичный).
@@ -245,7 +245,7 @@ js/dawn.js              рассвет: люди, рекорд, разбор, Е
 На рассвете есть кнопка **Copy result** — строка с табуляцией:
 
 ```
-AQIQAT night01  lang=ru  saved=4200/4200  credibility=100  freedom=100  takedowns=0
+DeepTruth night01  lang=ru  saved=4200/4200  credibility=100  freedom=100  takedowns=0
 senim_followed=2  tools=6  fake=3  real=3  unsure=1  dam=right  source=-  dana=excellent  minutes=6
 ```
 

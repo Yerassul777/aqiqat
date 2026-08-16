@@ -16,7 +16,7 @@ AQ.lang = 'en';
 AQ.STR = {
 
   /* ---- меню ------------------------------------------------ */
-  title:     { en: 'AQIQAT',           ru: 'AQIQAT',           kk: 'AQIQAT' },
+  title:     { en: 'DEEPTRUTH',        ru: 'DEEPTRUTH',        kk: 'DEEPTRUTH' },
   subtitle:  { en: 'The Long Night',   ru: 'Долгая ночь',      kk: 'Ұзақ түн' },
   tagline: {
     en: 'A flood is coming. 4 200 people are in its way.\nRumours travel faster than the water — some true, some not.\nYou are the only desk that checks. Get them out.',
@@ -621,9 +621,9 @@ AQ.STR = {
   copied:      { en: 'copied',      ru: 'скопировано',           kk: 'көшірілді' },
 
   creditsBody: {
-    en: 'AQIQAT (ақиқат — "truth" in Kazakh) is a verification game built for the UNESCO Youth Hackathon 2026.\n\nWhy it exists: a peer-reviewed reanalysis (Modirrousta-Galian & Higham, 2023) found that the leading misinformation games shift response bias rather than sensitivity — players learn to reject everything rather than to discriminate. A 2025 replication found no effect at all outside Western content. This game is built to fail differently: confirming what is true is scored as hard as refuting what is false.\n\nSetting: the region is real, the flood is a real kind of event. Every settlement, agency, company, account and person in this game is invented.\n\nSynthetic media inside the game — the fake evidence you are asked to catch — is AI-generated on purpose, and labelled as such here.',
-    ru: 'AQIQAT (ақиқат — «истина» по-казахски) — игра о верификации для UNESCO Youth Hackathon 2026.\n\nЗачем: рецензируемый переанализ (Modirrousta-Galian & Higham, 2023) показал, что ведущие игры про дезинформацию сдвигают критерий ответа, а не чувствительность, — игроки учатся отвергать всё, а не различать. Репликация 2025 года не нашла эффекта вне западного контента. Эта игра построена ошибаться иначе: подтвердить истинное стоит столько же, сколько опровергнуть ложное.\n\nСеттинг: область реальная, паводок — реальный тип события. Все посёлки, ведомства, компании, аккаунты и люди вымышлены.\n\nСинтетические медиа внутри игры — те самые поддельные улики, которые нужно поймать, — сгенерированы ИИ намеренно и обозначены здесь как таковые.',
-    kk: 'AQIQAT (ақиқат) — ЮНЕСКО Youth Hackathon 2026 үшін жасалған тексеру ойыны.\n\nБарлық елді мекен, мекеме, аккаунт және адам — ойдан шығарылған. Ойындағы синтетикалық медиа әдейі ЖИ арқылы жасалған.'
+    en: 'DeepTruth (the title nods to ақиқат — "truth" in Kazakh) is a verification game built for the UNESCO Youth Hackathon 2026.\n\nWhy it exists: a peer-reviewed reanalysis (Modirrousta-Galian & Higham, 2023) found that the leading misinformation games shift response bias rather than sensitivity — players learn to reject everything rather than to discriminate. A 2025 replication found no effect at all outside Western content. This game is built to fail differently: confirming what is true is scored as hard as refuting what is false.\n\nSetting: the region is real, the flood is a real kind of event. Every settlement, agency, company, account and person in this game is invented.\n\nSynthetic media inside the game — the fake evidence you are asked to catch — is AI-generated on purpose, and labelled as such here.',
+    ru: 'DeepTruth (название — отсылка к ақиқат, «истина» по-казахски) — игра о верификации для UNESCO Youth Hackathon 2026.\n\nЗачем: рецензируемый переанализ (Modirrousta-Galian & Higham, 2023) показал, что ведущие игры про дезинформацию сдвигают критерий ответа, а не чувствительность, — игроки учатся отвергать всё, а не различать. Репликация 2025 года не нашла эффекта вне западного контента. Эта игра построена ошибаться иначе: подтвердить истинное стоит столько же, сколько опровергнуть ложное.\n\nСеттинг: область реальная, паводок — реальный тип события. Все посёлки, ведомства, компании, аккаунты и люди вымышлены.\n\nСинтетические медиа внутри игры — те самые поддельные улики, которые нужно поймать, — сгенерированы ИИ намеренно и обозначены здесь как таковые.',
+    kk: 'DeepTruth (ақиқат сөзіне сілтеме) — ЮНЕСКО Youth Hackathon 2026 үшін жасалған тексеру ойыны.\n\nБарлық елді мекен, мекеме, аккаунт және адам — ойдан шығарылған. Ойындағы синтетикалық медиа әдейі ЖИ арқылы жасалған.'
   },
   close: { en: 'Close', ru: 'Закрыть', kk: 'Жабу' }
 };

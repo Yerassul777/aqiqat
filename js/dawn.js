@@ -265,7 +265,7 @@ AQ.DAWN = (function () {
 
   function resultLine(S) {
     var out = [
-      'AQIQAT night01',
+      'DeepTruth night01',
       'lang=' + AQ.lang,
       'saved=' + G.savedNow(S) + '/' + AQ.MAP.totalPop,
       'credibility=' + Math.round(S.meters.cred),
