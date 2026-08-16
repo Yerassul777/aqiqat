@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AQIQAT — The Long Night</title>
+<meta name="description" content="A verification game. You are the night shift at a fact-checking desk in Astana. Confirming what is true is as hard as refuting what is false.">
+<meta name="theme-color" content="#070a10">
+
+<!-- Самодостаточно: ни одного внешнего запроса. Шрифты системные,
+     графика рисуется в SVG, звук синтезируется через WebAudio.
+     Открывается двойным кликом с диска и работает на itch.io. -->
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23070a10'/><circle cx='16' cy='16' r='7' fill='none' stroke='%23f0b45c' stroke-width='2.5'/><path d='M21 21 L27 27' stroke='%23f0b45c' stroke-width='3' stroke-linecap='round'/></svg>">
+<link rel="stylesheet" href="css/aqiqat.css">
+</head>
+<body>
+
+<div id="scr-menu"     class="screen on"></div>
+<div id="scr-prologue" class="screen"></div>
+<div id="scr-test"  class="screen"></div>
+<div id="scr-shift" class="screen"></div>
+<div id="scr-dawn"  class="screen"></div>
+
+<div class="modal" id="modal"></div>
+<div class="npcstage" id="npcstage"></div>
+
+<noscript>
+  <div style="max-width:520px;margin:80px auto;padding:24px;color:#d7e0ec;font:14px/1.7 ui-monospace,monospace">
+    AQIQAT needs JavaScript. The whole game is client-side — nothing is sent anywhere.
+  </div>
+</noscript>
+
+<!-- Порядок важен: контент → утилиты → состояние → интерфейс.
+     Обычные <script>, не модули: так игра открывается прямо
+     с файловой системы, без локального сервера. -->
+<script src="content/villages.js"></script>
+<script src="content/night01.js"></script>
+<!-- Резолвер обязан существовать до того, как варианты
+     попробуют в него дописаться. -->
+<script src="js/scenario.js"></script>
+<script src="content/variants01.js"></script>
+<!-- Статьи прикрепляются к вариантам последним проходом,
+     поэтому файл обязан идти после variants01.js. -->
+<script src="content/articles01.js"></script>
+<script src="content/npc.js"></script>
+<script src="content/headlines.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/art.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/state.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/senim.js"></script>
+<script src="js/map.js"></script>
+<script src="js/inspect.js"></script>
+<script src="js/music.js"></script>
+<script src="js/alert.js"></script>
+<script src="js/records.js"></script>
+<script src="js/npc.js"></script>
+<script src="js/npcscene.js"></script>
+<script src="js/tutorial.js"></script>
+<script src="js/dawn.js"></script>
+<script src="js/desk.js"></script>
+<script>
+  AQ.Game.reset();
+  AQ.UI.init();
+</script>
+</body>
+</html>

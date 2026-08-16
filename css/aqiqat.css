@@ -1,0 +1,1128 @@
+/* ============================================================
+   AQIQAT — стиль v3: синяя ночь
+   ------------------------------------------------------------
+   Палитра держится на одном правиле: ТЁПЛЫЙ ЦВЕТ = ЖИВЫЕ ЛЮДИ.
+   Всё остальное — холодная ночь: земля, вода, панели, лёд.
+   Окна домов, фонари, сообщения жителей — единственное тёплое.
+   Посёлок гаснет — тёплое уходит, остаётся вода.
+
+   Ни одного внешнего файла: шрифты системные, графика в SVG,
+   звук синтезируется.
+   ============================================================ */
+
+:root {
+  --bg:      #060a12;   /* night-deep: земля, фон */
+  --bg2:     #080e1a;
+  --panel:   #0b1220;   /* night: панели */
+  --panel2:  #101a2c;
+  --line:    #16233a;
+  --line2:   #233450;
+
+  --txt:     #d7e0ec;
+  --dim:     #8494ad;
+  --dimmer:  #54627c;
+
+  --lamp:    #ffb765;   /* ТЁПЛОЕ: окна, фонари, люди */
+  --lamp2:   #8a5f2c;
+  --warmdim: #6b4a22;   /* погасшее окно */
+  --paper:   #f2eee5;
+  --ink:     #23201b;
+
+  --water:   #1d4f66;   /* река и разлив */
+  --phos:    #4fd0e8;   /* кромка воды, блики, холодный акцент */
+  --phos2:   #1d5266;
+  --ice:     #8fd4e8;
+
+  --danger:  #ff5d6c;   /* сирена, потери */
+  --warn:    #f5b23d;
+  --good:    #5ec98a;   /* Петропавл, спасённые */
+  --violet:  #a78bfa;
+
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  --hum:  ui-sans-serif, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --r: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  background: var(--bg); color: var(--txt);
+  font: 13px/1.55 var(--mono);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition: padding-top .3s cubic-bezier(.2,.9,.3,1);
+}
+/* ночь за окном: холодный свет сверху, тёплая лампа стола снизу */
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(900px 600px at 30% -12%, rgba(79,208,232,.05), transparent 60%),
+              radial-gradient(760px 560px at 92% 108%, rgba(255,183,101,.06), transparent 58%);
+}
+.wrap { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; padding: 12px; }
+
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 4px; }
+
+.screen { display: none; }
+.screen.on { display: block; animation: fade .35s ease; }
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+
+/* ============================================================
+   КАРКАС: это приложение, а не страница
+   ------------------------------------------------------------
+   Колесо мыши в игре обязано означать одно и то же везде —
+   прокрутку той панели, над которой курсор. Пока листалась вся
+   страница целиком, карта и счётчик спасённых уезжали за верхний
+   край, и экран читался как сайт, а не как рабочее место
+   дежурного.
+
+   Поэтому смена и рассвет занимают ровно высоту окна, а всё, что
+   не влезло, скроллится ВНУТРИ своей колонки. Карта, часы и
+   число спасённых не двигаются никогда.
+   ============================================================ */
+body:has(#scr-shift.on), body:has(#scr-dawn.on) { overflow: hidden; }
+#scr-shift.on, #scr-dawn.on { height: 100dvh; overflow: hidden; }
+#scr-shift.on > .wrap { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+
+/* ============================================================
+   МЕНЮ
+   ============================================================ */
+/* Фон меню — затопленный посёлок с горящими окнами. Файла нет —
+   остаётся градиент, игра выглядит законченной и без него. */
+.menu { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px;
+  background: linear-gradient(180deg, rgba(6,10,18,.78) 0%, rgba(6,10,18,.92) 62%, #060a12 100%),
+              url('../assets/village_wide.jpg') center 30% / cover no-repeat; }
+.menu h1 { font-size: clamp(48px, 11vw, 96px); letter-spacing: .22em; text-indent: .22em; color: var(--paper); text-shadow: 0 0 48px rgba(255,183,101,.28); }
+.menu .sub { margin-top: 2px; font-size: 12px; letter-spacing: .42em; text-indent: .42em; color: var(--lamp); text-transform: uppercase; }
+.menu .kaz { margin-top: 20px; font-size: 11px; color: var(--dimmer); letter-spacing: .16em; }
+.menu .pitch { margin-top: 32px; max-width: 520px; white-space: pre-line; color: var(--dim); font-size: 14px; line-height: 2; font-family: var(--hum); }
+.menu .go { margin-top: 36px; padding: 16px 52px; background: var(--lamp); color: #17120a; border-radius: 7px; font-weight: 700; letter-spacing: .2em; font-size: 14px; transition: .18s; }
+.menu .go:hover { background: #ffc978; box-shadow: 0 0 40px rgba(255,183,101,.35); transform: translateY(-1px); }
+.menu .go2 { margin-top: 12px; font-size: 11px; color: var(--dimmer); letter-spacing: .1em; border-bottom: 1px solid var(--line2); padding-bottom: 2px; }
+.menu .go2:hover { color: var(--dim); }
+.menu .foot { margin-top: 34px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.menu .foot button { font-size: 11px; color: var(--dimmer); letter-spacing: .08em; }
+.menu .foot button:hover { color: var(--dim); }
+
+.langs { display: flex; gap: 4px; }
+.langs button { padding: 4px 10px; font-size: 10.5px; letter-spacing: .1em; color: var(--dimmer); border: 1px solid var(--line); border-radius: 5px; }
+.langs button:hover { color: var(--dim); }
+.langs button.on { color: var(--lamp); border-color: var(--lamp2); background: rgba(255,183,101,.07); }
+
+/* ============================================================
+   ТЕСТ
+   ============================================================ */
+.test { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+.test .head { font-size: 11px; letter-spacing: .34em; color: var(--lamp); margin-bottom: 12px; }
+.test .intro { max-width: 520px; text-align: center; color: var(--dim); white-space: pre-line; line-height: 1.9; margin-bottom: 30px; font-size: 12.5px; }
+.test .counter { font-size: 10.5px; letter-spacing: .2em; color: var(--dimmer); margin-bottom: 14px; }
+.test .card { max-width: 620px; width: 100%; background: var(--paper); color: var(--ink); border-radius: 5px; padding: 30px 32px; font-family: var(--hum); font-size: 17px; line-height: 1.6; box-shadow: 0 22px 60px rgba(0,0,0,.55); animation: dealIn .3s cubic-bezier(.2,.9,.3,1); }
+@keyframes dealIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
+.test .btns { margin-top: 26px; display: flex; gap: 12px; }
+.test .btns button { padding: 14px 44px; border: 1px solid var(--line2); border-radius: 7px; letter-spacing: .16em; font-size: 12.5px; font-weight: 700; }
+.test .btns .t:hover { border-color: var(--good); color: var(--good); background: rgba(94,201,138,.08); }
+.test .btns .f:hover { border-color: var(--danger); color: var(--danger); background: rgba(255,93,108,.08); }
+.test .dots { margin-top: 22px; display: flex; gap: 5px; }
+.test .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line2); }
+.test .dots i.done { background: var(--lamp); }
+
+/* ============================================================
+   ШАПКА СМЕНЫ
+   ============================================================ */
+.topbar {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 12px;
+}
+.topbar .brand { font-size: 14px; letter-spacing: .26em; color: var(--paper); font-weight: 700; }
+.topbar .clock { font-size: 13px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* Счётчик спасённых — самое крупное на экране. */
+.saved { margin-left: 6px; margin-right: auto; min-width: 210px; }
+.saved .lbl { font-size: 8.5px; letter-spacing: .22em; color: var(--dimmer); }
+.saved .num { font-size: 15px; color: var(--dim); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.saved .num b { font-size: 27px; color: var(--good); font-weight: 700; letter-spacing: -.01em; }
+.saved .bar { height: 3px; background: var(--line); border-radius: 2px; margin-top: 3px; overflow: hidden; max-width: 230px; }
+.saved .bar i { display: block; height: 100%; background: var(--good); transition: width .7s cubic-bezier(.3,.8,.3,1); }
+
+.mini { border: 1px solid var(--line); border-radius: 7px; padding: 5px 10px; background: var(--panel); text-align: right; }
+.mini span { display: block; font-size: 8px; letter-spacing: .12em; color: var(--dimmer); text-transform: uppercase; }
+.mini b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.mini.water { border-color: var(--phos2); }
+.mini.water b { color: var(--phos); }
+/* Деньги — единственный счётчик, который игрок тратит сам,
+   поэтому он тёплый, а не приборный. */
+.mini.kaya { border-color: #6a5326; }
+.mini.kaya b { color: var(--lamp); }
+.mini.alarm { border-color: #4a1d28; color: var(--danger); animation: pulseRed 1.7s ease-in-out infinite; }
+@keyframes pulseRed { 0%,100% { box-shadow: inset 0 0 0 rgba(255,93,108,0) } 50% { box-shadow: inset 0 0 20px rgba(255,93,108,.18) } }
+
+/* ============================================================
+   СЦЕНА: карта + работа
+   ============================================================ */
+/* Обе колонки растягиваются на всю высоту сцены (stretch, а не
+   start) — иначе правая, где карточек в разы больше, зрительно
+   отрывается вниз от карты. */
+.stage { display: grid; grid-template-columns: minmax(0,1.28fr) minmax(0,1fr); gap: 14px;
+  align-items: stretch; flex: 1; min-height: 0; }
+
+.mapcol { display: flex; flex-direction: column; min-height: 0; }
+.maparea { position: relative; }
+.mapbox {
+  position: relative;
+  background: #070d18; border: 1px solid var(--line); border-radius: var(--r);
+  padding: 4px; overflow: hidden;
+  box-shadow: inset 0 0 60px rgba(4,8,16,.8);
+  touch-action: none;          /* панорама вместо прокрутки страницы */
+}
+.mapsvg { display: block; width: 100%; height: auto; border-radius: 7px; }
+
+/* Прокрутка не должна цеплять страницу за собой, когда колонка
+   докручена до края. */
+.workcol, .mapcol, .queue { overscroll-behavior: contain; }
+
+/* ---- карта: мир и камера --------------------------------- */
+.mworld { transition: transform 1.05s cubic-bezier(.3,.8,.25,1); will-change: transform; }
+
+/* земля */
+.mground { fill: #08101e; }
+.mhigh { fill: #0e1828; }
+.mcontour { fill: none; stroke: #14202f; stroke-width: .28; }
+.mfield { stroke: #0e1724; stroke-width: .3; }
+
+/* вода: река раздувается от русла наружу */
+.mflood-glow { fill: none; stroke: var(--phos); opacity: .07; stroke-linecap: round;
+  transition: stroke-width 1.3s cubic-bezier(.35,.7,.35,1); }
+.mflood-edge { fill: none; stroke: var(--phos); opacity: .38; stroke-linecap: round;
+  transition: stroke-width 1.3s cubic-bezier(.35,.7,.35,1); }
+.mflood { fill: none; stroke: var(--water); opacity: .94; stroke-linecap: round;
+  transition: stroke-width 1.3s cubic-bezier(.35,.7,.35,1); }
+.mriver-hl { fill: none; stroke: #2c7a94; stroke-width: .55; stroke-dasharray: 2.5 4.5;
+  opacity: .7; animation: flow 26s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -70; } }
+
+/* дороги: тёмная подложка + полотно */
+.mroad-base { fill: none; stroke: #050910; stroke-width: 1.15; stroke-linecap: round; stroke-linejoin: round; }
+.mroad { fill: none; stroke: #263548; stroke-width: .6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* дамба */
+.mdam .dam-wall { stroke: #46586f; stroke-width: 1.5; stroke-linecap: round; }
+.mdam .dam-top  { stroke: #93a5be; stroke-width: .45; stroke-linecap: round; }
+.mdam .dam-break { opacity: 0; transition: opacity .8s; }
+.mdam.broken .dam-break { opacity: 1; }
+.mdam.broken .dam-wall { stroke: #6e3340; stroke-dasharray: 2.1 1.5; }
+.mdam.broken .dam-top  { stroke-dasharray: 2.1 1.5; }
+.dam-burst { fill: var(--phos); opacity: .5; animation: burst 2.2s ease-in-out infinite; }
+.dam-crack { stroke: var(--danger); stroke-width: .4; }
+@keyframes burst { 0%,100% { opacity: .28 } 50% { opacity: .6 } }
+
+/* мост М-36 */
+.mbridge .br-deck { stroke: #3e5068; stroke-width: 1.7; stroke-linecap: round; }
+.mbridge .br-rail { stroke: #16233a; stroke-width: .35; }
+.mbridge .br-blocked { display: none; font-family: var(--mono); font-weight: 700;
+  font-size: calc(3.6px / var(--camk, 1)); fill: var(--danger); }
+.mbridge.blocked .br-deck { stroke: #6e2833; stroke-dasharray: 2 1.4; }
+.mbridge.blocked .br-blocked { display: block; }
+.mjam circle { fill: var(--warn); opacity: 0; transition: opacity .6s; }
+.mjam.on circle { opacity: .9; animation: jamPulse 1.6s ease-in-out infinite; }
+.mjam.on circle:nth-child(2) { animation-delay: .2s; }
+.mjam.on circle:nth-child(3) { animation-delay: .4s; }
+.mjam.on circle:nth-child(4) { animation-delay: .6s; }
+.mjam.on circle:nth-child(5) { animation-delay: .8s; }
+@keyframes jamPulse { 0%,100% { opacity: .45 } 50% { opacity: .95 } }
+
+/* ориентиры */
+.mlm .lm-box { fill: #0e1a2c; stroke: #2a3a52; stroke-width: .28; }
+.mlm .lm-cross { stroke: #c8646f; stroke-width: .42; stroke-linecap: round; }
+.mlm .lm-roof { fill: none; stroke: #2a3a52; stroke-width: .3; }
+/* Подписи держат постоянный экранный размер: делим на масштаб
+   камеры, иначе при приближении они превращаются в баннеры. */
+.mv-tag { font-family: var(--mono); font-size: calc(1.9px / var(--camk, 1)); fill: #4c5a74; text-anchor: middle;
+  paint-order: stroke; stroke: #060a12; stroke-width: calc(.5px / var(--camk, 1)); }
+
+/* Петропавл — безопасный город: единственное зелёное место */
+.city-b { fill: #142639; stroke: #2c405e; stroke-width: .22; }
+.city-w { fill: #cdeedd; opacity: .85; }
+.msafe-name { font-family: var(--mono); font-weight: 700; font-size: calc(3px / var(--camk, 1));
+  fill: var(--good); text-anchor: middle; letter-spacing: .08em;
+  paint-order: stroke; stroke: #060a12; stroke-width: calc(.7px / var(--camk, 1)); }
+.msafe-note { font-family: var(--mono); font-size: calc(1.8px / var(--camk, 1)); fill: #3f7a5a; text-anchor: middle;
+  paint-order: stroke; stroke: #060a12; stroke-width: calc(.45px / var(--camk, 1)); }
+
+/* посёлки: маленькие города с тёплыми окнами */
+.mvil { cursor: pointer; }
+.mv-hit { fill: transparent; }
+.hwall { fill: #1a2436; stroke: #060a12; stroke-width: .1; }
+.hroof { fill: #232f46; }
+.hroof.flat { fill: #2b3950; }
+.hwin { fill: var(--lamp); transition: fill 1.1s ease; }
+.hwin.wide { fill: var(--lamp); opacity: .9; }
+.hmast  { stroke: #46586f; stroke-width: .1; }
+.hflag  { fill: #1f5f78; }
+.hcross { stroke: #ff8d98; stroke-width: .16; stroke-linecap: round; }
+.hawn   { fill: #6b4a22; }
+.mhouse.dark .hwin, .mhouse.dark .hwin.wide { fill: #241c10; }
+.mvil:hover .hroof { fill: #2c3c58; }
+
+/* улицы, фонари и машины появляются при приближении */
+.mstreets line { stroke: #131e2e; stroke-width: .34; stroke-linecap: round; }
+.mstreets, .mlamps, .mcars { opacity: 0; transition: opacity .45s; }
+.lamp-glow { fill: var(--lamp); opacity: .1; }
+.lamp-dot  { fill: #ffd9a3; }
+.mcars rect { fill: #33445c; }
+.mapbox[data-lod="2"] .mstreets, .mapbox[data-lod="3"] .mstreets,
+.mapbox[data-lod="2"] .mlamps,   .mapbox[data-lod="3"] .mlamps,
+.mapbox[data-lod="2"] .mcars,    .mapbox[data-lod="3"] .mcars { opacity: 1; }
+/* в затопленном посёлке фонари гаснут вместе с окнами */
+.mvil.s-flooded .mlamps, .mvil.s-evacuated .mlamps { opacity: .12; }
+
+/* подписи ориентиров — только вблизи, иначе карта зарастает */
+.mlm .mv-tag, .msafe-note { opacity: 0; transition: opacity .4s; }
+.mapbox[data-lod="2"] .mlm .mv-tag, .mapbox[data-lod="3"] .mlm .mv-tag,
+.mapbox[data-lod="2"] .msafe-note,  .mapbox[data-lod="3"] .msafe-note { opacity: 1; }
+.lm-hit { fill: transparent; }
+.clickable { cursor: pointer; }
+.clickable:hover .lm-box { stroke: var(--lamp); }
+.clickable:hover .br-deck { stroke: var(--lamp); }
+.clickable:hover .dam-wall { stroke: var(--lamp); }
+
+/* кнопки масштаба */
+.mapzoom { position: absolute; right: 10px; top: 10px; z-index: 4; display: flex; flex-direction: column; gap: 4px; }
+.mapzoom button {
+  width: 27px; height: 27px; border-radius: 7px; font-size: 14px; line-height: 1;
+  background: rgba(11,18,32,.86); border: 1px solid var(--line2); color: var(--dim);
+  backdrop-filter: blur(3px); transition: .14s;
+}
+.mapzoom button:hover { color: var(--lamp); border-color: var(--lamp2); }
+
+/* ============================================================
+   ИНСПЕКТОР — карта отвечает на клик
+   ============================================================ */
+#inspect { display: none; }
+#inspect.on {
+  display: block; position: absolute; left: 10px; top: 10px; z-index: 7;
+  width: min(258px, 62%);
+  background: rgba(9,15,27,.95); border: 1px solid var(--line2); border-radius: 10px;
+  padding: 12px 13px 11px; backdrop-filter: blur(5px);
+  box-shadow: 0 14px 38px rgba(4,8,16,.6);
+  animation: dealIn .24s cubic-bezier(.2,.9,.3,1);
+}
+.i-close { position: absolute; right: 6px; top: 4px; font-size: 16px; color: var(--dimmer); line-height: 1; padding: 3px 6px; }
+.i-close:hover { color: var(--txt); }
+.i-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; padding-right: 18px; }
+.i-title { font-size: 13px; font-weight: 700; color: var(--txt); }
+.i-tag { font-size: 8px; letter-spacing: .12em; text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
+  border: 1px solid var(--line2); color: var(--dim); }
+.i-tag.s-evacuating { color: var(--good); border-color: #24503a; }
+.i-tag.s-evacuated  { color: var(--good); border-color: #24503a; background: rgba(94,201,138,.1); }
+.i-tag.s-halted     { color: var(--warn); border-color: #4a3a1d; }
+.i-tag.s-flooded    { color: var(--danger); border-color: #4a1d28; }
+.i-row { display: flex; align-items: center; gap: 8px; font-size: 10.5px; padding: 3.5px 0; }
+.i-row .k { color: var(--dimmer); white-space: nowrap; }
+.i-row .v { margin-left: auto; color: var(--txt); display: flex; align-items: center; gap: 7px; font-variant-numeric: tabular-nums; }
+.i-row .v b { color: var(--good); font-size: 12.5px; }
+.i-row.warn .v { color: var(--warn); }
+.i-bar { display: block; width: 46px; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.i-bar i { display: block; height: 100%; background: var(--dim); transition: width .8s; }
+.i-bar.good i { background: var(--good); }
+.i-bar.warn i { background: var(--warn); }
+.i-bar.bad i  { background: var(--danger); }
+.i-note { margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line);
+  font-family: var(--hum); font-size: 11px; line-height: 1.5; color: var(--dim); }
+
+/* дуга доверия: сколько этому посёлку осталось веры в тебя */
+.mv-ring { fill: none; stroke: transparent; stroke-width: .5; }
+.mv-trust { fill: none; stroke: var(--ice); stroke-width: .32; opacity: .5;
+  transform: rotate(-90deg); transform-origin: center; transform-box: fill-box;
+  transition: stroke-dasharray 1s ease; }
+
+.mv-name { font-family: var(--mono); font-size: calc(2.5px / var(--camk, 1)); fill: #b9c6da;
+  text-anchor: middle; letter-spacing: .04em;
+  paint-order: stroke; stroke: #060a12; stroke-width: calc(.65px / var(--camk, 1)); pointer-events: none; }
+.mv-pop  { font-family: var(--mono); font-size: calc(2.2px / var(--camk, 1)); fill: var(--dim); text-anchor: middle;
+  paint-order: stroke; stroke: #060a12; stroke-width: calc(.55px / var(--camk, 1)); pointer-events: none; }
+.mv-badge { font-family: var(--mono); font-weight: 700; font-size: calc(3.2px / var(--camk, 1));
+  text-anchor: middle; pointer-events: none;
+  paint-order: stroke; stroke: #060a12; stroke-width: calc(.6px / var(--camk, 1)); }
+
+/* состояния посёлка — разный визуальный язык, не только цвет */
+.mvil.s-evacuating .mv-badge { fill: var(--good); }
+.mvil.s-evacuated  .mv-badge { fill: var(--good); }
+.mvil.s-evacuated  .mv-pop { fill: var(--good); }
+.mvil.s-halted     .mv-badge { fill: var(--warn); }
+.mvil.s-halted     .hwin { fill: #8a6a33; }
+.mvil.s-flooded    .mv-badge { fill: var(--phos); }
+.mvil.s-flooded    .hwall { fill: #10202e; }
+.mvil.s-flooded    .hroof { fill: #152738; }
+.mvil.s-flooded    .mv-name, .mvil.s-flooded .mv-pop { fill: #4d7b8b; }
+
+/* вода накрывает посёлок + красный отсвет беды */
+.mv-floodzone { fill: var(--water); opacity: 0; stroke: var(--phos); stroke-width: .25;
+  transition: opacity 1.6s ease; }
+.mvil.s-flooded .mv-floodzone { opacity: .68; }
+.mvil.s-flooded .mv-ring { stroke: var(--danger); stroke-opacity: .5; animation: sosPulse 2.6s ease-in-out infinite; }
+@keyframes sosPulse { 0%,100% { stroke-opacity: .15 } 50% { stroke-opacity: .55 } }
+
+/* пульс на посёлке, о котором сейчас слух */
+.mvil.pending .mv-ring { stroke: var(--lamp); animation: ping 1.9s ease-out infinite; }
+@keyframes ping {
+  0%   { stroke-opacity: .9; transform: scale(1); }
+  70%  { stroke-opacity: 0;  transform: scale(1.4); }
+  100% { stroke-opacity: 0;  transform: scale(1.4); }
+}
+.mvil.pending .mv-ring { transform-origin: center; transform-box: fill-box; }
+
+/* люди: идут по дорогам, а не по воздуху */
+.mped { fill: #cdd8e6; transition: cx 1.1s cubic-bezier(.35,.7,.35,1), cy 1.1s cubic-bezier(.35,.7,.35,1), fill .5s; }
+.mped.safe { fill: var(--good); }
+.mped.lost { fill: #33506b; opacity: .5; }
+.mped.stalled { fill: var(--warn); }
+
+/* туман над низинами */
+.mfog { fill: #9fc3d9; opacity: .05; filter: url(#fogblur); }
+.mfog.f1 { animation: drift1 46s ease-in-out infinite alternate; }
+.mfog.f2 { animation: drift2 38s ease-in-out infinite alternate; }
+.mfog.f3 { animation: drift1 52s ease-in-out infinite alternate-reverse; }
+@keyframes drift1 { from { transform: translateX(-3px) } to { transform: translateX(4px) } }
+@keyframes drift2 { from { transform: translateX(3px) } to { transform: translateX(-4px) } }
+
+/* ---- телефон поверх карты -------------------------------- */
+.phone {
+  position: absolute; right: 12px; bottom: 10px; z-index: 6;
+  width: min(300px, 72%);
+  display: flex; flex-direction: column; gap: 6px;
+  pointer-events: none;
+}
+.pmsg {
+  background: rgba(10,17,30,.92); border: 1px solid var(--line2);
+  border-radius: 10px 10px 10px 3px; padding: 7px 11px;
+  animation: msgIn .35s cubic-bezier(.2,.9,.3,1);
+  backdrop-filter: blur(3px);
+}
+@keyframes msgIn { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+.pmsg .pwho { font-size: 8.5px; letter-spacing: .13em; color: var(--dimmer); text-transform: uppercase; margin-bottom: 2px; }
+.pmsg .pb { font-family: var(--hum); font-size: 12px; line-height: 1.5; color: var(--txt); }
+.pmsg.dana { border-color: rgba(255,183,101,.4); }
+.pmsg.dana .pwho { color: var(--lamp); }
+.pmsg.dana .pb { color: #f4e3ca; }
+.pmsg.source { border-style: dashed; border-color: #4a1d28; }
+.pmsg.source .pwho { color: var(--danger); }
+.pmsg.source .pb { font-style: italic; color: #d8a3a9; }
+.tdots { display: inline-flex; gap: 3px; align-items: center; height: 12px; }
+.tdots i { width: 4px; height: 4px; border-radius: 50%; background: var(--dim); animation: tdot 1.1s infinite; }
+.tdots i:nth-child(2) { animation-delay: .18s; }
+.tdots i:nth-child(3) { animation-delay: .36s; }
+@keyframes tdot { 0%,60%,100% { opacity: .25; transform: none } 30% { opacity: 1; transform: translateY(-2px) } }
+
+/* ---- очередь под картой ---------------------------------- */
+/* Очередь под картой листается отдельно, если слухов много:
+   карта от этого не должна съезжать. */
+.queue { margin-top: 10px; display: flex; flex-direction: column; gap: 6px;
+  overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+.qchip {
+  display: flex; align-items: baseline; gap: 9px; text-align: left; width: 100%;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 11px; transition: .14s; overflow: hidden; flex: 0 0 auto;
+}
+.qchip:hover { border-color: var(--line2); transform: translateX(2px); }
+.qchip.sel { border-color: var(--lamp2); background: rgba(255,183,101,.06); }
+.qchip.dying { border-color: #4a1d28; }
+.qchip .qv { font-size: 11px; color: var(--lamp); white-space: nowrap; }
+.qchip .qt { font-size: 11px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.qchip .qx { font-size: 8.5px; letter-spacing: .1em; color: var(--danger); text-transform: uppercase; white-space: nowrap; }
+.qempty { color: var(--dimmer); font-size: 11px; padding: 8px 2px; }
+
+/* ============================================================
+   РАБОЧАЯ КОЛОНКА
+   ============================================================ */
+/* Листается сама в себе: карта и счётчик спасённых при этом не
+   двигаются — они обязаны быть на экране всегда. */
+.workcol { display: flex; flex-direction: column; gap: 12px; min-width: 0;
+  overflow-y: auto; overflow-x: hidden; min-height: 0; padding-right: 4px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 13px; }
+.card h2 { font-size: 9.5px; letter-spacing: .2em; color: var(--dimmer); text-transform: uppercase; font-weight: 600; margin-bottom: 10px; display: flex; gap: 8px; }
+.card h2 .n { margin-left: auto; color: var(--dim); }
+.nosel { color: var(--dimmer); font-size: 12px; padding: 40px 12px; text-align: center; }
+
+/* ============================================================
+   ПОСТ — карточка соцсети
+   ============================================================ */
+.postcard { background: #0c1526; border-color: #1c2c48; padding: 13px 14px; }
+
+.pc-head { display: flex; align-items: center; gap: 10px; }
+.pc-ava {
+  width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto;
+  display: grid; place-items: center;
+  font: 700 14px var(--hum);
+  background: hsl(var(--h, 200), 42%, 24%);
+  color: hsl(var(--h, 200), 68%, 74%);
+  border: 1px solid hsl(var(--h, 200), 42%, 38%);
+}
+.pc-id { min-width: 0; flex: 1; }
+.pc-name { font: 700 13.5px var(--hum); color: var(--txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-verif { color: var(--phos); margin-left: 5px; font-size: 12px; }
+.pc-sub { font-size: 10.5px; color: var(--dimmer); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-time { font-size: 11px; color: var(--dim); font-family: var(--mono); white-space: nowrap; }
+.pc-menu { margin-left: 7px; color: var(--dimmer); }
+
+.pc-fwd { margin-top: 8px; font-size: 10.5px; color: #7ea8c4; font-family: var(--mono); }
+
+.postcard .ctext { font-family: var(--hum); font-size: 16px; line-height: 1.5; margin: 9px 0 10px; color: #e8eef7; }
+
+/* медиа: фото как фото — рамка, деградация, лупа */
+.mediaw {
+  display: block; position: relative; width: 100%; padding: 0;
+  border: 1px solid #1c2c48; border-radius: 6px; overflow: hidden;
+  cursor: zoom-in; background: #060a12;
+}
+.mediaw:hover { border-color: #2c4468; }
+.media-svg, .media-img { display: block; width: 100%; height: 172px; object-fit: cover; background: #060a12; }
+/* растровое фото проходит тот же конвейер деградации, что и
+   процедурные сцены: виньетка, лёгкий наклон, приглушение —
+   скриншот скриншота, а не глянцевая иллюстрация */
+.mediaw.raster .media-img {
+  transform: rotate(.4deg) scale(1.02);
+  filter: saturate(.82) contrast(1.05) brightness(.94);
+}
+.mediaw.raster::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(115% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.42) 100%);
+}
+.mediaw .zoomhint {
+  position: absolute; right: 7px; top: 6px; width: 22px; height: 22px;
+  display: grid; place-items: center; border-radius: 5px;
+  background: rgba(6,10,18,.72); color: var(--ice); font-size: 12px;
+  opacity: 0; transition: .18s;
+}
+.mediaw:hover .zoomhint { opacity: 1; }
+.mediaw .playbtn {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(6,10,18,.66); color: #fff; font-size: 15px;
+  border: 1.5px solid rgba(255,255,255,.5); padding-left: 3px;
+}
+.media-none { padding: 26px; text-align: center; background: var(--panel2); border-radius: 5px; font-family: var(--mono); font-size: 11px; color: var(--dimmer); letter-spacing: .08em; }
+
+.pc-stats { display: flex; gap: 14px; margin-top: 9px; font-size: 11.5px; color: var(--dim); font-family: var(--mono); }
+.pc-stats .hot { color: var(--warn); }
+.pc-stats .views { margin-left: auto; color: var(--dimmer); }
+.pc-meta { margin-top: 3px; font-size: 10px; color: var(--dimmer); font-family: var(--mono); }
+.pc-meta .edited { color: var(--warn); }
+
+.pc-comments { margin-top: 9px; border-top: 1px solid #131f36; padding-top: 7px; }
+.pc-comments summary { font-size: 11px; color: var(--dim); cursor: pointer; list-style: none; }
+.pc-comments summary::-webkit-details-marker { display: none; }
+.pc-comments summary:hover { color: var(--txt); }
+.pcc { padding: 7px 0 2px; display: flex; gap: 8px; align-items: baseline; }
+.pcc + .pcc { border-top: 1px solid #101a30; }
+.pcc-who { font-size: 10.5px; font-family: var(--mono); color: #7ea8c4; white-space: nowrap; }
+.pcc-t { font-family: var(--hum); font-size: 12px; line-height: 1.45; color: var(--dim); }
+.pcc.local { border-left: 2px solid #2c5a45; padding-left: 8px; }
+.pcc.local .pcc-t { color: #c8d6c9; }
+.pcc.bot .pcc-t { opacity: .7; }
+
+.postcard .why {
+  margin-top: 10px; font-family: var(--mono); font-size: 11px; color: #6d7ea0;
+  border-left: 2px solid var(--line2); padding-left: 9px; line-height: 1.55;
+}
+
+/* ---- атомы ------------------------------------------------ */
+.atoms { margin-top: 11px; }
+.ahint { font-size: 10px; color: var(--dimmer); margin-bottom: 7px; line-height: 1.5; font-family: var(--mono); }
+.ahint.loud { color: var(--lamp); font-size: 11px; font-weight: 600; }
+.atomrow { display: flex; flex-wrap: wrap; gap: 6px; }
+.atom {
+  font-size: 11px; padding: 7px 11px; border-radius: 6px; border: 1px dashed var(--line2);
+  color: var(--dim); background: var(--panel2); transition: .14s; text-align: left; line-height: 1.35;
+  font-family: var(--mono);
+}
+.atom:hover { border-color: var(--lamp2); color: var(--txt); }
+.atom.armed { border-style: solid; border-color: var(--lamp); color: var(--lamp); background: rgba(255,183,101,.12); box-shadow: 0 0 0 2px rgba(255,183,101,.15); }
+.atom.spent { opacity: .35; border-style: solid; }
+.atom.shake { animation: shake .34s; }
+@keyframes shake { 0%,100% { transform: none } 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
+.atomrow.pulse .atom { animation: breathe 2.1s ease-in-out infinite; }
+.atomrow.pulse .atom:nth-child(2) { animation-delay: .18s; }
+.atomrow.pulse .atom:nth-child(3) { animation-delay: .36s; }
+@keyframes breathe { 0%,100% { box-shadow: none } 50% { box-shadow: 0 0 0 3px rgba(255,183,101,.16) } }
+
+/* ---- инструменты ------------------------------------------ */
+.tools { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.tool {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; text-align: left;
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; transition: .14s;
+}
+.tool:hover:not(:disabled) { border-color: var(--phos2); background: rgba(79,208,232,.05); }
+.tool:disabled { opacity: .32; }
+.tool .nm { font-size: 11.5px; font-weight: 600; }
+.tool .c { font-size: 9.5px; color: var(--warn); white-space: nowrap; }
+.tool .d { grid-column: 1 / -1; font-size: 9.5px; color: var(--dimmer); line-height: 1.4; }
+.tool.done { border-color: var(--phos2); }
+.tool.done .c { color: var(--phos); }
+/* Не хватает монет: цена остаётся на виду, но гаснет — игрок
+   должен понимать, сколько копить, а не гадать. */
+.tool.poor .c { color: var(--danger); }
+.tool.poor { border-style: dashed; }
+.coachline { font-size: 10.5px; line-height: 1.6; color: var(--lamp); margin-bottom: 9px; padding: 8px 10px; border-left: 2px solid var(--lamp2); background: rgba(255,183,101,.05); border-radius: 0 7px 7px 0; }
+
+.tres { margin-top: 9px; display: flex; flex-direction: column; gap: 7px; }
+.tresult { border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: var(--bg2); animation: findIn .3s ease; }
+.tresult .th { font-size: 8.5px; letter-spacing: .16em; color: var(--phos); text-transform: uppercase; margin-bottom: 7px; }
+.tresult.blind { border-style: dashed; }
+.tresult.blind .th { color: var(--dimmer); }
+.tresult .note { font-size: 10.5px; color: var(--dim); line-height: 1.6; }
+
+/* визуальный артефакт инструмента */
+.tvis { display: block; width: 100%; height: auto; margin: 2px 0 8px;
+  border: 1px solid var(--line); border-radius: 6px; background: #0b1424; }
+
+/* ---- находки ---------------------------------------------- */
+.finds { display: flex; flex-direction: column; gap: 8px; }
+.find { border-left: 2px solid var(--phos); background: rgba(79,208,232,.05); padding: 9px 11px; border-radius: 0 7px 7px 0; animation: findIn .4s cubic-bezier(.2,.9,.3,1); }
+.find.corr { border-left-color: var(--good); background: rgba(94,201,138,.05); }
+.find.piv  { border-left-color: var(--lamp); background: rgba(255,183,101,.08); }
+@keyframes findIn { from { opacity: 0; transform: translateX(-10px) } to { opacity: 1; transform: none } }
+.find .k { font-size: 8.5px; letter-spacing: .17em; color: var(--phos); text-transform: uppercase; }
+.find.corr .k { color: var(--good); } .find.piv .k { color: var(--lamp); }
+.find .x { font-size: 12px; color: var(--txt); margin-top: 4px; line-height: 1.55; font-family: var(--hum); }
+
+/* ============================================================
+   SENIM — не блок с процентом, а собеседник
+   ============================================================ */
+.senim { border-color: var(--phos2); background: linear-gradient(180deg, rgba(79,208,232,.05), transparent 60%); transition: border-color .4s; }
+.senim .sh { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.senim-ava { flex: 0 0 auto; line-height: 0; }
+.senim-id { min-width: 0; }
+.senim .nm { font-size: 12px; letter-spacing: .22em; color: var(--phos); font-weight: 700; }
+.senim .sub { font-size: 8.5px; color: var(--dimmer); line-height: 1.35; max-width: 210px; }
+.senim .conf { margin-left: auto; text-align: right; }
+
+/* диафрагма */
+.senim-eye { display: block; }
+.sa-ground { fill: #061018; }
+.sa-ring   { fill: none; stroke: var(--phos2); stroke-width: 3; }
+.sa-blade  { fill: #0e2733; stroke: #123644; stroke-width: 1; transform-origin: 50px 50px; }
+.sa-blades { transform-origin: 50px 50px; transition: transform .5s cubic-bezier(.3,.8,.3,1); }
+.sa-iris   { fill: none; stroke: var(--phos); stroke-width: 3; opacity: .85;
+             transform-origin: 50px 50px; transition: transform .5s, stroke .5s, opacity .5s; }
+.sa-pupil  { fill: var(--phos); transform-origin: 50px 50px; transition: transform .5s, fill .5s; }
+.sa-scan   { fill: var(--phos); opacity: 0; }
+.sa-slit   { stroke: var(--warn); stroke-width: 0; stroke-linecap: round; transition: stroke-width .4s; }
+
+.senim-eye.s-idle .sa-pupil { animation: irisBreathe 4.2s ease-in-out infinite; }
+@keyframes irisBreathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.22) } }
+
+.senim-eye.s-analysing .sa-blades { transform: rotate(22deg); }
+.senim-eye.s-analysing .sa-iris   { transform: scale(.72); }
+.senim-eye.s-analysing .sa-pupil  { transform: scale(.6); }
+.senim-eye.s-analysing .sa-scan   { animation: scanSweep 1.1s linear infinite; }
+@keyframes scanSweep {
+  0%   { opacity: 0;   transform: translateY(-42px) }
+  15%  { opacity: .34 }
+  85%  { opacity: .34 }
+  100% { opacity: 0;   transform: translateY(42px) }
+}
+
+.senim-eye.s-confident .sa-ring { stroke: var(--phos); }
+.senim-eye.s-confident .sa-iris { opacity: 1; }
+
+.senim-eye.s-uncertain .sa-iris { stroke-dasharray: 5 4; animation: irisJitter .5s steps(4) infinite; }
+@keyframes irisJitter { 0%,100% { transform: translate(0,0) } 50% { transform: translate(1.4px,-1px) } }
+
+/* «я ошиблась» — радужка схлопывается в щель, цвет уходит в янтарь */
+.senim-eye.s-wrong .sa-ring  { stroke: var(--warn); stroke-dasharray: 20 12; }
+.senim-eye.s-wrong .sa-iris  { transform: scale(.12); opacity: 0; }
+.senim-eye.s-wrong .sa-pupil { transform: scale(0); }
+.senim-eye.s-wrong .sa-slit  { stroke-width: 4; }
+.senim-eye.s-wrong .sa-blades { transform: rotate(-14deg); }
+.senim.st-wrong { border-color: var(--lamp2); background: linear-gradient(180deg, rgba(255,183,101,.07), transparent 60%); }
+.senim.st-wrong .nm { color: var(--warn); }
+
+/* ---- Андрей и Али --------------------------------------- */
+.npc-sub { font-family: var(--hum); font-size: 11.5px; line-height: 1.6; color: var(--dim); margin-bottom: 9px; }
+.npcs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.npcb { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; text-align: left;
+  padding: 9px 11px; border: 1px solid var(--line2); border-radius: 8px; background: var(--bg2);
+  color: var(--txt); font: inherit; cursor: pointer; transition: border-color .15s, background .15s; }
+.npcb:hover:not(:disabled) { border-color: #2f4a68; background: rgba(80,130,190,.07); }
+.npcb .nn { font-size: 11.5px; font-weight: 600; }
+.npcb .nc { font-family: var(--mono); font-size: 10px; color: var(--lamp); white-space: nowrap; }
+.npcb .nr { grid-column: 1 / -1; font-size: 9.5px; color: var(--dimmer); }
+.npcb:disabled { cursor: not-allowed; opacity: .55; }
+.npcb.done { border-color: #2f4a68; }
+.npcb.done .nc { color: #7fb0e0; }
+.npcb.poor .nc { color: var(--danger); }
+.npcb.going { border-style: dashed; }
+.npchs { margin-top: 9px; display: flex; flex-direction: column; gap: 7px; }
+.npch { border-left: 2px solid #2f4a68; border-radius: 0 7px 7px 0; padding: 8px 11px;
+  background: rgba(80,130,190,.05); animation: findIn .35s cubic-bezier(.2,.9,.3,1); }
+.nh-who { font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; color: #7fb0e0; }
+.nh-t { margin-top: 4px; font-family: var(--hum); font-size: 12.5px; line-height: 1.6; color: var(--txt); }
+@media (max-width: 560px) { .npcs { grid-template-columns: 1fr; } }
+
+/* ---- сцена визита: Андрей/Али стучатся в дверь ------------ */
+.npcstage { position: fixed; inset: 0; z-index: 205; display: none; align-items: center; justify-content: center;
+  padding: 22px; background: rgba(4,6,11,.86); pointer-events: none; }
+.npcstage.on { display: flex; animation: fade .2s ease; }
+.npcs-box { position: relative; width: 100%; max-width: 400px; background: var(--panel); border: 1px solid var(--line2);
+  border-radius: 13px; padding: 14px 16px 16px; animation: dealIn .3s cubic-bezier(.2,.9,.3,1); }
+.npcs-who { font-size: 9px; letter-spacing: .24em; color: var(--dimmer); text-transform: uppercase; margin-bottom: 8px; }
+.npcs-svg { display: block; width: 100%; aspect-ratio: 340 / 170; border-radius: 8px; background: #0a0e14; }
+.npcs-cap { margin-top: 9px; font-family: var(--hum); font-size: 11.5px; color: var(--dim); text-align: center; }
+
+.npcs-walker { transform: translate(20px, 126px); transition: transform .55s cubic-bezier(.3,.7,.3,1); transform-origin: 0px 0px; }
+.npcs-walker.at-door { transform: translate(232px, 126px); }
+.npcs-walker.leaving { transform: translate(20px, 126px) scaleX(-1); transition-duration: .55s; }
+.npcs-bob { animation: npcsBob .5s ease-in-out infinite; }
+.npcs-walker.knock .npcs-bob { animation: npcsKnock .18s ease-in-out 2; }
+.npcs-walker.wave .npcs-bob { animation: npcsWave .5s ease-in-out; }
+@keyframes npcsBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-2.4px) } }
+@keyframes npcsKnock { 0%,100% { transform: translateX(0) } 50% { transform: translateX(3px) } }
+@keyframes npcsWave { 0%,100% { transform: rotate(0) } 50% { transform: rotate(-9deg) } }
+
+.npcs-resident { opacity: 0; transform-origin: 0px 0px; transition: opacity .3s ease; }
+.npcs-resident.show { opacity: 1; }
+.npcs-doorlit { transition: opacity .3s ease; }
+.npcs-ring { fill: none; stroke: #ffd98a; stroke-width: 1.4; transform-box: fill-box; transform-origin: center;
+  animation: npcsRing .5s ease-out forwards; }
+@keyframes npcsRing { from { transform: scale(1); opacity: .85 } to { transform: scale(4.3); opacity: 0 } }
+
+.npcs-frame { position: relative; }
+.npcs-say { position: absolute; transform: translate(-50%, -100%); opacity: 0; transition: opacity .2s ease; }
+.npcs-say-a { left: 68%; top: 68%; }
+.npcs-say-b { left: 77%; top: 69%; }
+.npcs-say.show { opacity: 1; }
+
+/* ---- Ерасыл до найма: только цена, никакой подсказки ---- */
+.senim-hire { margin-top: 10px; }
+.hire-t { font-size: 12px; font-weight: 600; color: var(--ice); }
+.hire-p { margin-top: 5px; font-family: var(--hum); font-size: 12px; line-height: 1.6; color: var(--dim); }
+.hire-b { margin-top: 11px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 10px 14px; border: 1px solid #6a5326; border-radius: 8px; background: rgba(255,183,101,.06);
+  color: var(--lamp); font: inherit; font-size: 11.5px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; cursor: pointer; transition: background .15s, border-color .15s; }
+.hire-b:hover:not(:disabled) { background: rgba(255,183,101,.13); border-color: var(--lamp2); }
+.hire-b .hb-c { font-family: var(--mono); font-size: 12px; letter-spacing: 0; }
+.hire-b:disabled { cursor: not-allowed; opacity: .5; border-style: dashed; }
+.hire-b.poor { color: var(--danger); border-color: #4a1d28; }
+
+/* ---- статья, которую он принёс -------------------------- */
+.senim-art { margin-top: 11px; border: 1px solid var(--line2); border-left-width: 3px; border-radius: 0 9px 9px 0;
+  padding: 10px 12px; background: var(--bg2); animation: findIn .35s cubic-bezier(.2,.9,.3,1); }
+/* Репутация красит саму рамку: решение «с каким доверием
+   читать» должно приниматься до первой строки текста. */
+.senim-art.rep-good  { border-left-color: var(--phos); }
+.senim-art.rep-mixed { border-left-color: var(--lamp2); }
+.senim-art.rep-bad   { border-left-color: var(--danger); }
+.art-k { font-size: 8.5px; letter-spacing: .16em; color: var(--dimmer); text-transform: uppercase; }
+.art-k.op { margin-top: 12px; color: var(--phos); }
+.art-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 6px; }
+.art-src { font-size: 12.5px; font-weight: 600; color: var(--txt); }
+.art-rep { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.rep-good  .art-rep { color: var(--phos); }
+.rep-mixed .art-rep { color: var(--lamp); }
+.rep-bad   .art-rep { color: var(--danger); }
+.art-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 5px; }
+.art-meta .am { font-family: var(--mono); font-size: 9.5px; color: var(--dim); }
+.art-meta .am i { display: block; font-style: normal; font-size: 7.5px; letter-spacing: .12em;
+  color: var(--dimmer); text-transform: uppercase; }
+.art-body { margin-top: 8px; font-family: var(--hum); font-size: 12.5px; line-height: 1.65; color: var(--txt); }
+
+/* Он обязан проговаривать это каждый раз — иначе платная
+   подсказка незаметно становится оракулом. */
+.senim-caveat { margin-top: 7px; font-size: 10.5px; font-style: italic; color: var(--dimmer); }
+
+/* его реплика по ходу работы */
+.senim-note {
+  margin-top: 9px; padding: 8px 11px; border-left: 2px solid var(--phos2);
+  background: rgba(79,208,232,.05); border-radius: 0 7px 7px 0;
+  font-family: var(--hum); font-size: 12px; line-height: 1.55; color: var(--ice);
+}
+.senim-note.in { animation: findIn .35s cubic-bezier(.2,.9,.3,1); }
+.senim.st-wrong .senim-note { border-left-color: var(--warn); background: rgba(255,183,101,.07); color: #f2dcbb; }
+
+/* точность за ночь — падает на глазах */
+.senim-acc { display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  font-size: 8.5px; letter-spacing: .12em; color: var(--dimmer); text-transform: uppercase; }
+.senim-acc .bar { flex: 1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.senim-acc .bar b { display: block; height: 100%; background: var(--phos); transition: width 1.1s cubic-bezier(.3,.8,.3,1); }
+.senim-acc .n { font-size: 11px; color: var(--phos); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.senim-acc.low .bar b, .senim-acc.low .n { background: var(--warn); color: var(--warn); }
+
+/* рассвет: доверял / заслуживал */
+.senim-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.senim-two .s2 { border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px; background: var(--panel); }
+.senim-two .l { font-size: 9px; letter-spacing: .13em; color: var(--dimmer); text-transform: uppercase; }
+.senim-two .v { font-size: 27px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 6px; }
+.senim-two .you .v { color: var(--lamp); }
+.senim-two .it .v  { color: var(--phos); }
+
+/* ============================================================
+   ПРОЛОГ — двадцать секунд, объясняющих игру
+   ============================================================ */
+.prologue { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 40px 22px; text-align: left;
+  background: linear-gradient(180deg, rgba(6,10,18,.86) 0%, rgba(6,10,18,.94) 60%, #060a12 100%),
+              url('../assets/village_wide.jpg') center 35% / cover no-repeat; }
+.pro-col { max-width: 560px; width: 100%; }
+.pro-clock { font-size: 10.5px; letter-spacing: .3em; color: var(--dimmer); text-transform: uppercase;
+  padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+.pro-ava { height: 0; opacity: 0; overflow: hidden; transition: opacity .8s; }
+.pro-ava.on { height: auto; opacity: 1; margin-bottom: 22px; }
+.pro-lines { display: flex; flex-direction: column; gap: 15px; min-height: 230px; }
+.pro-line { font-family: var(--hum); font-size: 15px; line-height: 1.65; color: var(--dim);
+  animation: dealIn .3s cubic-bezier(.2,.9,.3,1); }
+.pro-line.boot { font-family: var(--mono); font-size: 12px; color: var(--phos2); letter-spacing: .1em; }
+.pro-line.senim { color: var(--ice); border-left: 2px solid var(--phos2); padding-left: 13px; }
+.pro-line .pro-who { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: .22em;
+  color: var(--phos); margin-bottom: 4px; }
+.pro-skip { margin-top: 34px; font-size: 11px; color: var(--dimmer); letter-spacing: .1em;
+  border-bottom: 1px solid var(--line2); padding-bottom: 2px; }
+.pro-skip:hover { color: var(--dim); }
+.senim .conf .l { display: block; font-size: 7.5px; letter-spacing: .14em; color: var(--dimmer); }
+.senim .conf .v { font-size: 22px; font-weight: 700; color: var(--phos); font-variant-numeric: tabular-nums; }
+.senim .line { font-size: 12px; color: var(--txt); line-height: 1.55; min-height: 34px; font-family: var(--hum); }
+.senim .line .cursor { display: inline-block; width: 6px; height: 12px; background: var(--phos); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0 } }
+.senim.hot { border-color: #2f8a80; }
+.senim.hot .conf .v { color: #6ef0e0; text-shadow: 0 0 20px rgba(79,208,232,.45); }
+
+/* ============================================================
+   ВЕРДИКТ
+   ============================================================ */
+.vcard { position: sticky; bottom: 10px; z-index: 5;
+  background: var(--panel); border-color: var(--line2);
+  box-shadow: 0 -12px 34px rgba(6,10,18,.8); }
+
+.vrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.vb {
+  padding: 16px 10px; border: 1px solid var(--line2); border-radius: 9px;
+  font-size: 13px; font-weight: 700; letter-spacing: .1em; transition: .15s; line-height: 1.3;
+}
+.vb span { display: block; margin-top: 5px; font-size: 9.5px; font-weight: 400; letter-spacing: 0; color: var(--dimmer); line-height: 1.45; }
+.vb.real:hover   { border-color: var(--good);   color: var(--good);   background: rgba(94,201,138,.1); }
+.vb.fake:hover   { border-color: var(--danger); color: var(--danger); background: rgba(255,93,108,.1); }
+.vb.unsure:hover { border-color: var(--violet); color: var(--violet); background: rgba(167,139,250,.1); }
+.vb.photo:hover  { border-color: var(--lamp);   color: var(--lamp);   background: rgba(255,183,101,.1); }
+.vb.story:hover  { border-color: var(--danger); color: var(--danger); background: rgba(255,93,108,.1); }
+.vb.both:hover   { border-color: var(--danger); color: var(--danger); background: rgba(255,93,108,.1); }
+.vcard.step2 { border-color: var(--lamp2); background: linear-gradient(180deg, rgba(255,183,101,.05), var(--panel) 60%); }
+.vback { margin-top: 9px; font-size: 10.5px; color: var(--dimmer); }
+.vback:hover { color: var(--dim); }
+
+.more { margin-top: 10px; }
+.more summary { font-size: 10px; color: var(--dimmer); cursor: pointer; letter-spacing: .1em; }
+.nukebtn { width: 100%; margin-top: 8px; padding: 10px; border: 1px solid #4a1d28; border-radius: 7px; color: var(--danger); font-size: 10.5px; letter-spacing: .1em; }
+.nukebtn:hover { background: rgba(255,93,108,.08); }
+.nukehint { font-size: 9px; color: var(--dimmer); text-align: center; margin-top: 5px; }
+
+/* ============================================================
+   ЭФФЕКТЫ
+   ============================================================ */
+#fx { position: fixed; inset: 0; pointer-events: none; z-index: 300;
+  display: grid; place-items: center; }
+
+.fxstamp {
+  font: 800 clamp(30px, 6vw, 52px) var(--mono); letter-spacing: .16em; text-indent: .16em;
+  padding: 10px 30px; border: 4px solid currentColor; border-radius: 12px;
+  background: rgba(6,10,18,.4);
+  opacity: 0; transform: scale(2.4) rotate(-8deg);
+}
+.fxstamp.real   { color: var(--good); }
+.fxstamp.fake   { color: var(--danger); }
+.fxstamp.unsure { color: var(--violet); }
+.fxstamp.removed { color: var(--danger); border-style: dashed; }
+.fxstamp.hit {
+  opacity: 1; transform: scale(1) rotate(-8deg);
+  transition: transform .13s cubic-bezier(.2,1.6,.4,1), opacity .09s;
+}
+.fxstamp.gone { opacity: 0; transform: scale(.95) rotate(-8deg) translateY(8px); transition: .4s ease; }
+
+body.fx-shake .wrap { animation: shakeXY .38s cubic-bezier(.36,.07,.19,.97); }
+@keyframes shakeXY {
+  10%, 90% { transform: translate(-2px, 1px); }
+  30%, 70% { transform: translate(3px, -2px); }
+  50% { transform: translate(-3px, 2px); }
+}
+
+body.fx-desat { filter: grayscale(.85) brightness(.92); transition: filter .18s; }
+body { transition: filter .35s; }
+
+#vignette { position: fixed; inset: 0; pointer-events: none; z-index: 250; opacity: 0; }
+#vignette.on { animation: vigPulse 2.4s ease-out; }
+#vignette.flood  { box-shadow: inset 0 0 150px rgba(79,208,232,.5); }
+#vignette.danger { box-shadow: inset 0 0 150px rgba(255,93,108,.45); }
+@keyframes vigPulse { 0% { opacity: 0 } 18% { opacity: 1 } 55% { opacity: .55 } 100% { opacity: 0 } }
+
+/* последний час: низкий пульс под всем экраном */
+body.fx-lowtime::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 240;
+  box-shadow: inset 0 0 130px rgba(255,93,108,.15);
+  animation: lowPulse 2.4s ease-in-out infinite;
+}
+@keyframes lowPulse { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
+
+/* ============================================================
+   ЧП — кризис ломает порядок на экране
+   ============================================================ */
+#alerts { position: fixed; left: 0; right: 0; top: 0; z-index: 260; pointer-events: none;
+  display: flex; flex-direction: column; }
+.ribbon {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; font-family: var(--mono); font-size: 11.5px;
+  letter-spacing: .12em; font-weight: 700;
+  transform: translateY(-100%); opacity: 0;
+  transition: transform .32s cubic-bezier(.2,.9,.3,1), opacity .32s;
+}
+.ribbon.in { transform: none; opacity: 1; }
+.ribbon .rb-mark { font-size: 13px; }
+.ribbon .rb-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ribbon.emergency { background: linear-gradient(90deg, #6b1622, #a3202f 45%, #6b1622); color: #ffe3e6;
+  box-shadow: 0 6px 24px rgba(255,93,108,.3); }
+.ribbon.flood { background: linear-gradient(90deg, #0d3446, #17607e 45%, #0d3446); color: #d6f3fb; }
+.ribbon.senim { background: linear-gradient(90deg, #08303a, #10515f 45%, #08303a); color: var(--ice); }
+.ribbon.kaya { background: linear-gradient(90deg, #3d3115, #6a5326 45%, #3d3115); color: #ffe9c2; }
+.ribbon.npc  { background: linear-gradient(90deg, #1c2b3d, #2f4a68 45%, #1c2b3d); color: #dce9f7; }
+
+/* Чем хуже ночь, тем меньше карта похожа на аккуратную схему. */
+body[data-crisis="2"] .lamp-dot { animation: flick 3.1s steps(2) infinite; }
+body[data-crisis="3"] .lamp-dot { animation: flick 1.3s steps(2) infinite; }
+@keyframes flick { 0%,88%,100% { opacity: 1 } 92% { opacity: .15 } }
+body[data-crisis="3"] .mground { fill: #0b0d16; }
+body[data-crisis="3"] .mv-floodzone { stroke: var(--danger); }
+body[data-crisis="3"]::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 235;
+  box-shadow: inset 0 0 120px rgba(255,93,108,.12);
+}
+body[data-crisis="2"] .topbar, body[data-crisis="3"] .topbar { border-bottom-color: #4a1d28; }
+
+.queue.shook { animation: shakeXY .4s cubic-bezier(.36,.07,.19,.97); }
+
+/* ---- лайтбокс --------------------------------------------- */
+.lightbox { margin-top: 6px; }
+.lightbox .media-svg, .lightbox .lb-img { width: 100%; height: auto; max-height: 58vh; border-radius: 7px; }
+.lb-mark { font-family: var(--hum); font-size: 12.5px; color: var(--ice); text-align: left;
+  border-left: 2px solid var(--phos); padding: 7px 10px; margin-top: 8px;
+  background: rgba(79,208,232,.05); border-radius: 0 6px 6px 0; }
+
+/* ============================================================
+   ОБУЧЕНИЕ
+   ============================================================ */
+.tut-dim { opacity: .3; pointer-events: none; filter: grayscale(.5); transition: opacity .3s; }
+.tut-focus { position: relative; z-index: 3; box-shadow: 0 0 0 2px var(--lamp), 0 0 28px rgba(255,183,101,.4) !important; border-radius: 8px; animation: focusPulse 1.7s ease-in-out infinite; }
+@keyframes focusPulse { 0%,100% { box-shadow: 0 0 0 2px var(--lamp), 0 0 22px rgba(255,183,101,.32) } 50% { box-shadow: 0 0 0 2px var(--lamp), 0 0 40px rgba(255,183,101,.55) } }
+
+#coach { display: none; }
+#coach.on {
+  display: block; position: fixed; z-index: 40; max-width: 330px;
+  background: var(--lamp); color: #1a1409; border-radius: 10px; padding: 12px 15px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.55); animation: dealIn .28s cubic-bezier(.2,.9,.3,1);
+}
+#coach.on.center { left: 50%; top: 22%; transform: translateX(-50%); }
+#coach .ctext { font-family: var(--hum); font-size: 14px; line-height: 1.5; font-weight: 600; }
+#coach .cskip { margin-top: 8px; font-size: 10px; color: #6b5320; letter-spacing: .06em; border-bottom: 1px solid rgba(0,0,0,.2); }
+#coach::after {
+  content: ''; position: absolute; bottom: -7px; left: var(--tail, 50%); margin-left: -7px;
+  border: 7px solid transparent; border-top-color: var(--lamp); border-bottom: 0;
+}
+#coach.below::after { bottom: auto; top: -7px; border-top: 0; border-bottom-color: var(--lamp); border-bottom-width: 7px; }
+#coach.center::after { display: none; }
+
+/* ============================================================
+   МОДАЛКА
+   ============================================================ */
+.modal { position: fixed; inset: 0; background: rgba(4,6,11,.9); display: none; align-items: center; justify-content: center; padding: 22px; z-index: 200; }
+.modal.on { display: flex; animation: fade .25s ease; }
+.modal .box { background: var(--panel); border: 1px solid var(--line2); border-radius: 13px; padding: 26px 28px; max-width: 560px; width: 100%; max-height: 86vh; overflow-y: auto; animation: dealIn .3s cubic-bezier(.2,.9,.3,1); }
+.modal .k { font-size: 9px; letter-spacing: .24em; color: var(--dimmer); text-transform: uppercase; margin-bottom: 12px; }
+.modal h3 { font-size: 17px; margin-bottom: 12px; }
+.modal p { font-size: 14px; color: var(--txt); line-height: 1.8; white-space: pre-line; font-family: var(--hum); }
+.modal .cpeople { margin-top: 14px; font-size: 13px; color: var(--dim); }
+.modal .cpeople b { color: var(--good); font-size: 17px; }
+.modal .cred { margin-top: 6px; font-size: 11px; letter-spacing: .08em; }
+.modal .cred.up { color: var(--good); } .modal .cred.down { color: var(--danger); }
+/* Кто именно перестал слушать — и почему это дорого. Число без
+   адресата не объясняет ничего. */
+.modal .ctrust { margin-top: 12px; font-family: var(--hum); font-size: 13px; line-height: 1.55; color: var(--danger); }
+.modal .cwhy { margin-top: 4px; font-family: var(--hum); font-size: 11.5px; line-height: 1.5; color: var(--dimmer); }
+.modal .ckaya { margin-top: 8px; font-family: var(--mono); font-size: 12px; }
+.modal .ckaya.up { color: var(--lamp); } .modal .ckaya.down { color: var(--danger); }
+.modal .ok { margin-top: 20px; padding: 12px 28px; background: var(--lamp); color: #17120a; border-radius: 7px; font-weight: 700; letter-spacing: .13em; font-size: 12px; }
+.modal .alt { margin-top: 20px; margin-left: 10px; font-size: 11px; color: var(--dimmer); }
+
+/* ============================================================
+   РАССВЕТ
+   ============================================================ */
+/* Рассвет — приборная панель на один экран, а не длинная лента.
+   Всё, что нужно понять про свою ночь, обязано читаться без
+   единой прокрутки: сколько людей вывезено, что было на самом
+   деле по каждому слуху и чего стоила каждая ошибка. */
+/* Панель собирается к центру: когда слухов было мало, экран не
+   должен зиять пустотой посередине, а когда много — разбор
+   сжимается и листается внутри себя. */
+.dawn { max-width: 1080px; margin: 0 auto; height: 100dvh;
+  padding: 18px 18px 14px; display: flex; flex-direction: column;
+  justify-content: center; gap: 12px; }
+
+.dtop { text-align: center; flex: none; }
+.dkick { font-size: 10px; letter-spacing: .4em; color: var(--lamp); margin-bottom: 6px; }
+.dbig { font-variant-numeric: tabular-nums; line-height: 1; }
+.dbig b { font-size: clamp(38px, 6.4vh, 62px); color: var(--good); font-weight: 700; letter-spacing: -.02em; }
+.dbig span { font-size: 18px; color: var(--dimmer); margin-left: 8px; }
+.dsub { margin-top: 3px; font-size: 10px; letter-spacing: .18em; color: var(--dim); text-transform: uppercase; }
+.dbar { height: 4px; background: var(--line); border-radius: 2px; margin: 9px auto 0; max-width: 340px; overflow: hidden; }
+.dbar i { display: block; height: 100%; background: var(--good); animation: grow 1.2s cubic-bezier(.2,.9,.3,1); }
+@keyframes grow { from { width: 0 } }
+
+/* Рекорд стоит прямо под счётом — это одно утверждение, а не две
+   разные секции про одно и то же число. */
+.drec { margin-top: 9px; display: flex; flex-direction: column; gap: 2px; align-items: center;
+  font-family: var(--hum); font-size: 12.5px; }
+.drec .d-beat  { color: var(--good); font-weight: 600; }
+.drec .d-miss  { color: var(--dim); }
+.drec .d-first { color: var(--dim); }
+.drec .d-meta  { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em;
+  color: var(--dimmer); text-transform: uppercase; }
+
+.dsect { flex: none; }
+.dsect > h3 { font-size: 9px; letter-spacing: .26em; color: var(--dimmer); text-transform: uppercase; margin-bottom: 7px; }
+.dsect > h4, .dmore-in h4 { font-size: 9px; letter-spacing: .24em; color: var(--dimmer);
+  text-transform: uppercase; margin: 16px 0 8px; }
+.dmore-in h4:first-child { margin-top: 0; }
+
+/* Разбор — единственная секция, которой позволено занять
+   остаток экрана и, если строк совсем много, прокрутиться
+   внутри себя. */
+.dledger { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.ledger { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; min-height: 0;
+  overscroll-behavior: contain; padding-right: 2px; }
+.lrow { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 12px; align-items: center;
+  padding: 6px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel);
+  opacity: 0; animation: revealRow .3s forwards; }
+@keyframes revealRow { to { opacity: 1 } }
+.lmain { min-width: 0; }
+.lrow .t { font-size: 11px; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lrow .m { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 9.5px; color: var(--dimmer); margin-top: 2px; }
+.lrow .lw { color: var(--dim); }
+/* Вот эта строка и объясняет «наполовину» — раньше её не было
+   вовсе, и игрок не мог понять, за что срезали. */
+.lrow .lhalf { margin-top: 3px; font-family: var(--hum); font-size: 10.5px; line-height: 1.4; color: var(--warn); }
+.lrow .lp { font-family: var(--mono); font-size: 10px; color: var(--dim); white-space: nowrap; }
+.lrow .lp b { font-size: 12px; }
+.lrow .lp.ok b  { color: var(--good); }
+.lrow .lp.mid b { color: var(--warn); }
+.lrow .lp.bad b { color: var(--danger); }
+.lrow .v { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
+.lrow.ok  { border-color: #24503a; } .lrow.ok  .v { color: var(--good); }
+.lrow.bad { border-color: #4a1d28; } .lrow.bad .v { color: var(--danger); }
+.lrow.mid { border-color: #4a3a1d; } .lrow.mid .v { color: var(--warn); }
+.lrow.gone .v { color: var(--dimmer); }
+
+/* Дана и Ерасыл — рядом, а не двумя большими секциями. */
+.dpair { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); gap: 12px; align-items: start; }
+.dana-who { font-size: 9px; letter-spacing: .18em; color: var(--lamp); text-transform: uppercase; margin-bottom: 5px; }
+.dana-msg { background: rgba(255,183,101,.06); border: 1px solid rgba(255,183,101,.18);
+  border-radius: 10px; border-bottom-left-radius: 4px; padding: 10px 13px;
+  font-family: var(--hum); font-size: 12.5px; line-height: 1.55; color: #f2e5d0; white-space: pre-line; }
+.ybox { border: 1px solid var(--phos2); border-radius: 10px; padding: 10px 13px;
+  background: linear-gradient(180deg, rgba(79,208,232,.04), transparent 70%); }
+.yb-h { font-size: 9px; letter-spacing: .18em; color: var(--phos); text-transform: uppercase; }
+.yb-n { display: flex; gap: 18px; margin-top: 7px; }
+.yb-n span { display: flex; flex-direction: column; gap: 2px; }
+.yb-n i { font-style: normal; font-size: 8.5px; letter-spacing: .1em; color: var(--dimmer); text-transform: uppercase; }
+.yb-n b { font-size: 19px; font-variant-numeric: tabular-nums; }
+.yb-n b.bad { color: var(--danger); }
+.yb-t { margin-top: 7px; font-family: var(--hum); font-size: 11px; line-height: 1.5; color: var(--dim); }
+
+/* Всё техническое — под одним кликом, а не на экране. */
+.dmore { flex: none; border-top: 1px solid var(--line); padding-top: 8px; }
+.dmore > summary { cursor: pointer; font-size: 9px; letter-spacing: .2em; color: var(--dimmer);
+  text-transform: uppercase; list-style: none; padding: 3px 0; }
+.dmore > summary::-webkit-details-marker { display: none; }
+.dmore > summary::before { content: '▸ '; }
+.dmore[open] > summary::before { content: '▾ '; }
+.dmore > summary:hover { color: var(--lamp); }
+.dmore-in { margin-top: 10px; max-height: 46vh; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+
+.callout { margin-top: 10px; padding: 12px 15px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line2); font-family: var(--hum); font-size: 12.5px; line-height: 1.65; white-space: pre-line; color: var(--txt); }
+.callout.cynic { border-color: #4a1d28; background: linear-gradient(180deg, rgba(255,93,108,.05), transparent 60%); }
+.callout.real  { border-color: #24503a; background: linear-gradient(180deg, rgba(94,201,138,.05), transparent 60%); }
+
+.sdt { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sdtbox { border: 1px solid var(--line); border-radius: 10px; padding: 14px 15px; background: var(--panel); }
+.sdtbox .l { font-size: 9.5px; letter-spacing: .13em; color: var(--dimmer); text-transform: uppercase; }
+.sdtbox .d { font-size: 10px; color: var(--dimmer); margin-top: 3px; line-height: 1.5; }
+.sdtbox .nums { display: flex; align-items: baseline; gap: 10px; margin-top: 11px; font-variant-numeric: tabular-nums; }
+.sdtbox .n1 { font-size: 15px; color: var(--dim); }
+.sdtbox .ar { font-size: 12px; color: var(--dimmer); }
+.sdtbox .n2 { font-size: 27px; font-weight: 700; }
+.sdtbox .tag { font-size: 9.5px; letter-spacing: .12em; margin-top: 6px; text-transform: uppercase; }
+.sdtbox.up .n2, .sdtbox.up .tag { color: var(--good); }
+.sdtbox.down .n2, .sdtbox.down .tag { color: var(--danger); }
+.sdtbox.flat .n2, .sdtbox.flat .tag { color: var(--dim); }
+
+/* какая это была ночь */
+.nightbox { border: 1px solid var(--line2); border-radius: 10px; padding: 12px 14px; background: var(--panel); }
+.nv-list { display: flex; flex-direction: column; gap: 5px; }
+.nv-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 10px; align-items: baseline;
+  font-size: 11px; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.nv-row:last-child { border-bottom: 0; }
+.nv-t { color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nv-v { color: var(--lamp); font-family: var(--mono); font-size: 10px; }
+.nv-n { color: var(--dimmer); font-variant-numeric: tabular-nums; font-size: 10px; }
+.nv-note { margin-top: 10px; font-family: var(--hum); font-size: 12px; line-height: 1.6; color: var(--txt); }
+.nv-seed { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 9.5px; letter-spacing: .14em; color: var(--dimmer); text-transform: uppercase; }
+.nv-seed code { font-family: var(--mono); font-size: 12px; color: var(--ice); letter-spacing: 0; text-transform: none; }
+.nv-again { margin-left: auto; font-size: 10.5px; color: var(--lamp); letter-spacing: .08em;
+  border: 1px solid var(--lamp2); border-radius: 6px; padding: 6px 12px; text-transform: none; }
+.nv-again:hover { background: rgba(255,183,101,.1); }
+
+/* Кнопки прижаты к низу панели и не уезжают за экран. */
+.again { flex: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; }
+.again button { padding: 10px 30px; background: var(--lamp); color: #17120a; border-radius: 7px; font-weight: 700; letter-spacing: .16em; font-size: 12px; }
+.again .h { flex-basis: 100%; font-size: 10px; color: var(--dimmer); line-height: 1.5; max-width: 560px; margin: 0 auto; }
+.again .copy { padding: 0; background: none; color: var(--dimmer); font-size: 10.5px; font-weight: 400; letter-spacing: 0; border-bottom: 1px solid var(--line2); }
+
+/* ============================================================
+   ТЕЛЕФОН (вёрстка)
+   ============================================================ */
+@media (max-width: 1000px) {
+  .stage { grid-template-columns: minmax(0,1fr); }
+  .mapcol { position: static; }
+  .tools { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .wrap { padding: 9px; }
+  .topbar { gap: 8px; }
+  .topbar .brand { font-size: 12px; }
+  .saved { min-width: 0; flex: 1 1 100%; order: 3; margin: 0; }
+  .saved .bar { max-width: none; }
+  .mini { padding: 4px 8px; }
+  .mini b { font-size: 13px; }
+  .langs { order: 2; margin-left: auto; }
+  .postcard .ctext { font-size: 15px; }
+  .media-svg, .media-img { height: 168px; }
+  .phone { width: min(260px, 82%); }
+  .pmsg .pb { font-size: 11.5px; }
+  /* На телефоне липкая панель накрывала бы текст: колонка одна
+     и длинная. Вердикт просто идёт последним. */
+  .vcard { position: static; box-shadow: none; }
+  .vb { padding: 15px 6px; font-size: 12px; }
+  .vb span { font-size: 9px; }
+  .atom { font-size: 11.5px; padding: 9px 12px; }
+  .pc-stats { gap: 10px; font-size: 10.5px; }
+  .fxstamp { letter-spacing: .1em; padding: 8px 18px; }
+  .sdt { grid-template-columns: 1fr; }
+  .vlist .vrow { grid-template-columns: 84px 1fr auto; font-size: 11px; }
+  .dawn { padding: 26px 12px 50px; }
+  #coach.on { max-width: calc(100vw - 24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "aqiqat-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Автотесты AQIQAT. Сама игра зависимостей не имеет — они нужны только для проверок.",
+  "scripts": {
+    "test": "node logic.js && node ui.js",
+    "logic": "node logic.js",
+    "ui": "node ui.js",
+    "layout": "node layout.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0",
+    "puppeteer-core": "^22.0.0"
+  }
+}
